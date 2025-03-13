@@ -198,3 +198,4 @@ if __name__ == "__main__":
 
     solve_wave_equation_1d(dx=0.05, dt=0.001, T=1.0, L=1.0, c=1.0, plot=True)
     solve_wave_equation_1d()
+    
