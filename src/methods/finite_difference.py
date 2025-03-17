@@ -85,7 +85,7 @@ def interp_poly(xx, yy):
     return (poly)
 
 
-def solve_heat_equation(dx=0.1, dt=0.01, T=1.0, L=1.0, alpha=1.0, plot=True):
+def solve_heat_equation_1d(dx=0.1, dt=0.01, T=1.0, L=1.0, alpha=1.0, plot=True):
     """Solve the 1D heat equation using explicit finite difference method.
     Returns temperature distribution over space and time, an np.ndarray.
     Can plot heat map.
@@ -194,7 +194,7 @@ if __name__ == "__main__":
     print(f"Central Difference: {central_difference(f, x0)}")
     print(f"Second Derivative: {second_derivative(f, x0)}")
 
-    solve_heat_equation(dx=0.05, dt=0.001, T=0.5, L=1.0, alpha=1.0, plot=True)
+    solve_heat_equation_1d(dx=0.05, dt=0.001, T=0.5, L=1.0, alpha=1.0, plot=True)
 
     solve_wave_equation_1d(dx=0.05, dt=0.001, T=1.0, L=1.0, c=1.0, plot=True)
     solve_wave_equation_1d()
