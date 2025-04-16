@@ -7,14 +7,14 @@ def lax_wendroff_linear(u0, a, dx, dt, t_max):
         u_t + a u_x = 0
 
     Parameters:
-        u0     : array-like, initial condition sampled on the grid
-        a      : float, wave speed (positive or negative)
-        dx     : float, spatial step size
-        dt     : float, time step size
-        t_max  : float, final simulation time
+        u0: array-like, initial condition sampled on the grid
+        a: float, wave speed (positive or negative)
+        dx: float, spatial step size
+        dt: float, time step size
+        t_max: float, final simulation time
 
     Returns:
-        u_hist : 2D array of shape (Nt+1, N), numerical solution at each time step
+        u_hist: 2D array of shape (Nt+1, N), numerical solution at each time step
     """
     u = u0.copy()
     u_hist = [u.copy()]
@@ -38,11 +38,11 @@ def compute_phase_error(u_hist, u_exact):
     the location of the peak (maximum value) in both.
 
     Parameters:
-        u_hist  : 2D array, numerical solution at all time steps
-        u_exact : array-like, exact solution at final time
+        u_hist: 2D array, numerical solution at all time steps
+        u_exact: array-like, exact solution at final time
 
     Returns:
-        shift   : int, index shift between numerical and exact peaks
+        shift: int, index shift between numerical and exact peaks
     """
     u_final = u_hist[-1]
     shift = np.argmax(u_final) - np.argmax(u_exact)
@@ -54,13 +54,13 @@ def lax_wendroff_burgers(u0, dx, dt, t_max):
         u_t + (u^2 / 2)_x = 0
 
     Parameters:
-        u0     : array-like, initial condition sampled on the grid
-        dx     : float, spatial step size
-        dt     : float, time step size
-        t_max  : float, final simulation time
+        u0: array-like, initial condition sampled on the grid
+        dx: float, spatial step size
+        dt: float, time step size
+        t_max: float, final simulation time
 
     Returns:
-        u_hist : 2D array of shape (Nt+1, N), numerical solution at each time step
+        u_hist: 2D array of shape (Nt+1, N), numerical solution at each time step
     """
     u = u0.copy()
     u_hist = [u.copy()]
@@ -88,11 +88,11 @@ def plot_solution_comparison(x, u_hist, u_exact, t, label="Numerical"):
     Plots the numerical and exact solutions at a given time.
 
     Parameters:
-        x       : array-like, spatial grid points
-        u_hist  : 2D array, numerical solution at all time steps
-        u_exact : array-like, exact solution at final time
-        t       : float, time of snapshot
-        label   : str, label for the numerical method used
+        x: array-like, spatial grid points
+        u_hist: 2D array, numerical solution at all time steps
+        u_exact: array-like, exact solution at final time
+        t: float, time of snapshot
+        label: str, label for the numerical method used
     """
     plt.plot(x, u_exact, '--', label='Exact')
     plt.plot(x, u_hist[-1], label=label)
