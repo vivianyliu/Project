@@ -1,69 +1,134 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def solve_lax_wendroff_advection(u0, a=1.0, L=1.0, T=1.0, Nx=200, CFL=0.8, nonlinear=False):
+def lax_wendroff_linear(u0, a, dx, dt, t_max):
     """
-    Solves the linear or nonlinear advection equation using Lax-Wendroff method.
+    Solves the 1D linear advection equation using the second-order Lax-Wendroff scheme:
+        u_t + a u_x = 0
 
     Parameters:
-        u0: function, initial condition u(x, 0)
-        a: float, advection speed
-        L: float, domain length
-        T: float, final time
-        Nx: int, number of spatial points
-        CFL: float, Courant number for stability
-        nonlinear: bool, whether to use nonlinear form (Burgers' type)
-        
+        u0     : array-like, initial condition sampled on the grid
+        a      : float, wave speed (positive or negative)
+        dx     : float, spatial step size
+        dt     : float, time step size
+        t_max  : float, final simulation time
+
     Returns:
-        x: array of grid points
-        u: 2D array of solution u(x, t)
+        u_hist : 2D array of shape (Nt+1, N), numerical solution at each time step
     """
-    dx = L / Nx
-    x = np.linspace(0, L, Nx, endpoint=False)
-    dt = CFL * dx / abs(a if not nonlinear else 1.0)
-    Nt = int(T / dt)
+    u = u0.copy()
+    u_hist = [u.copy()]
+    r = a * dt / dx
+    steps = int(t_max / dt)
 
-    u = np.zeros((Nt+1, Nx))
-    u[0, :] = u0(x)
+    for _ in range(steps):
+        u_new = np.zeros_like(u)
+        u_new[1:-1] = (u[1:-1]
+                       - 0.5 * r * (u[2:] - u[:-2])
+                       + 0.5 * r**2 * (u[2:] - 2*u[1:-1] + u[:-2]))
+        u_new[0] = u_new[-2]
+        u_new[-1] = u_new[1]
+        u = u_new.copy()
+        u_hist.append(u.copy())
+    return np.array(u_hist)
 
-    for n in range(0, Nt):
-        un = u[n, :].copy()
+def compute_phase_error(u_hist, u_exact):
+    """
+    Computes the phase shift between the numerical and exact solution by comparing
+    the location of the peak (maximum value) in both.
 
-        if nonlinear:
-            f = 0.5 * un**2
-            df = un
-        else:
-            f = a * un
-            df = a
+    Parameters:
+        u_hist  : 2D array, numerical solution at all time steps
+        u_exact : array-like, exact solution at final time
 
-        u[n+1, 1:-1] = un[1:-1] - 0.5 * dt/dx * (f[2:] - f[:-2]) + \
-                       0.5 * (dt/dx)**2 * (df[2:] + df[:-2]) * (un[2:] - 2*un[1:-1] + un[:-2])
+    Returns:
+        shift   : int, index shift between numerical and exact peaks
+    """
+    u_final = u_hist[-1]
+    shift = np.argmax(u_final) - np.argmax(u_exact)
+    return shift
 
-        # Periodic BC
-        u[n+1, 0] = u[n+1, -2]
-        u[n+1, -1] = u[n+1, 1]
-    return x, u
+def lax_wendroff_burgers(u0, dx, dt, t_max):
+    """
+    Solves the nonlinear inviscid Burgers' equation using the Lax-Wendroff method:
+        u_t + (u^2 / 2)_x = 0
 
-def plot_lax_wendroff(x, u, times, dt, title="Lax-Wendroff Advection Solution"):
-    plt.figure(figsize=(10, 5))
-    for t in times:
-        plt.plot(x, u[int(t/dt)], label=f"t={t:.2f}")
+    Parameters:
+        u0     : array-like, initial condition sampled on the grid
+        dx     : float, spatial step size
+        dt     : float, time step size
+        t_max  : float, final simulation time
+
+    Returns:
+        u_hist : 2D array of shape (Nt+1, N), numerical solution at each time step
+    """
+    u = u0.copy()
+    u_hist = [u.copy()]
+    steps = int(t_max / dt)
+
+    for _ in range(steps):
+        u_new = np.zeros_like(u)
+        f = 0.5 * u**2 # Compute flux f = u^2 / 2 and its derivative f' as fp
+        fp = u
+
+        # L-W update
+        u_new[1:-1] = u[1:-1] - (dt / (2 * dx)) * (f[2:] - f[:-2]) \
+                      + (dt**2 / (2 * dx**2)) * (fp[2:] * (f[2:] - f[1:-1]) - fp[:-2] * (f[1:-1] - f[:-2]))
+
+        u_new[0] = u_new[-2]
+        u_new[-1] = u_new[1]
+
+        u = u_new.copy()
+        u_hist.append(u.copy())
+    return np.array(u_hist)
+
+
+def plot_solution_comparison(x, u_hist, u_exact, t, label="Numerical"):
+    """
+    Plots the numerical and exact solutions at a given time.
+
+    Parameters:
+        x       : array-like, spatial grid points
+        u_hist  : 2D array, numerical solution at all time steps
+        u_exact : array-like, exact solution at final time
+        t       : float, time of snapshot
+        label   : str, label for the numerical method used
+    """
+    plt.plot(x, u_exact, '--', label='Exact')
+    plt.plot(x, u_hist[-1], label=label)
+    plt.title(f"Solution at t={t}")
     plt.xlabel("x")
-    plt.ylabel("u(x, t)")
-    plt.title(title)
+    plt.ylabel("u")
     plt.legend()
     plt.grid(True)
     plt.show()
 
-
 if __name__ == "__main__":
-    u0 = lambda x: np.exp(-100 * (x - 0.5)**2)
-    x, u = solve_lax_wendroff_advection(u0, a=1.0, L=1.0, T=1.0, Nx=400, CFL=0.8, nonlinear=False)
-    dt = 0.8 * (1.0 / 400)
-    plot_lax_wendroff(x, u, times=[0, 0.25, 0.5, 0.75, 1.0], dt=dt)
+    L = 1.0
+    N = 200
+    dx = L / N
+    x = np.linspace(0, L, N, endpoint=False)
+    # Initial condition: we choose single sine wave
+    u0 = np.sin(2 * np.pi * x)
+    a = 1.0
+    dt = 0.4 * dx / a
+    t_max = 1.0
+    u_exact = np.sin(2 * np.pi * ((x - a * t_max) % 1.0))
+    u_hist = lax_wendroff_linear(u0, a, dx, dt, t_max)
+    plot_solution_comparison(x, u_hist, u_exact, t_max, label="Lax-Wendroff")
+    shift = compute_phase_error(u_hist, u_exact)
+    print(f"Approximate phase shift (in grid points): {shift}")
 
-    # Nonlinear case (Burgers-like)
-    x, u = solve_lax_wendroff_advection(u0, a=1.0, L=1.0, T=1.0, Nx=400, CFL=0.5, nonlinear=True)
-    dt = 0.5 * (1.0 / 400)
-    plot_lax_wendroff(x, u, times=[0, 0.25, 0.5, 0.75, 1.0], dt=dt,
-                      title="Nonlinear Advection (Lax-Wendroff)")
+    # Burgers' equation
+    u0_burgers = np.sin(2 * np.pi * x)
+    dt_burgers = 0.3 * dx / np.max(np.abs(u0_burgers))  # conservative CFL
+    t_max_burgers = 0.5
+    u_hist_burgers = lax_wendroff_burgers(u0_burgers, dx, dt_burgers, t_max_burgers)
+    plt.plot(x, u0_burgers, '--', label="Initial")
+    plt.plot(x, u_hist_burgers[-1], label="Lax-Wendroff (Burgers)")
+    plt.title("Nonlinear Advection: Inviscid Burgers' Equation")
+    plt.xlabel("x")
+    plt.ylabel("u")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
