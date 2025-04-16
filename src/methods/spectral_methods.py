@@ -14,17 +14,13 @@ def solve_poisson_spectral_1D(f, N=1000, L=2*np.pi):
         x: array of grid points
         u: array of approximate solution at grid points
     """
-    # Grid points
+
     x = np.linspace(0, L, N, endpoint=True)
     dx = L / N
 
-    # Evaluate f(x) on the grid
     f_vals = f(x)
-
-    # FFT of f
     f_hat = np.fft.fft(f_vals)
 
-    # Wavenumbers
     k = np.fft.fftfreq(N, d=dx) * 2 * np.pi
     k_squared = -(k**2)
     k_squared[0] = 1  # avoid division by zero
@@ -50,13 +46,10 @@ def compute_error_up_to_constant(u_approx, u_exact):
     Returns:
         l2_error: the 2 norm error of the spectral solution and -f(x)
     """
-    # Calulates the difference in means
-    shift = np.mean(u_exact) - np.mean(u_approx)
 
-    # Updates aproximated solutin with +C correction
+    shift = np.mean(u_exact) - np.mean(u_approx)
     u_aligned = u_approx + shift
 
-    # Computes error
     abs_error = np.abs(u_aligned - u_exact)
     l2_error = np.sqrt(np.mean(abs_error**2))
     return l2_error
@@ -76,6 +69,7 @@ if __name__ == "__main__":
     plt.text(0.3, -0.5, f'error ={err}', fontsize=8, bbox = props)
     plt.grid(True)
     plt.show()
+    
     f = lambda x: np.sin(x)
     x, u = solve_poisson_spectral_1D(f)
     err = compute_error_up_to_constant(u, -f(x))
