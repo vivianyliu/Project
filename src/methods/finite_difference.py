@@ -146,11 +146,8 @@ def solve_wave_equation_1d(dx=0.1, dt=0.01, T=1.0, L=1.0, c=1.0, plot=True):
     plot (bool): Create plot true or false
     """
 
-    # Number of spatial points
-    nx = int(L / dx) + 1
-    
-    # Number of time steps
-    nt = int(T / dt) + 1
+    nx = int(L / dx) + 1 # spatial points
+    nt = int(T / dt) + 1 # time steps
     
     # Stability condition for wave equation
     if dt > dx / c:

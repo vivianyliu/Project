@@ -83,8 +83,6 @@ def apply_boundary_conditions(K, F, nodes, u0=0, uL=0):
         uL (float): Boundary condition at x=L.
     """
 
-    # n_nodes = len(nodes)
-
     # Apply u(0) = u0
     K[0, :] = 0
     K[0, 0] = 1
