@@ -126,7 +126,7 @@ if __name__ == "__main__":
     plt.xlabel("x")
     plt.ylabel("y")
     plt.colorbar(label="u(x, y, T)")
-    plt.grid(False)
+    plt.grid(True)
     plt.show()
 
     X, Y, U = solve_fractional_rbf_dq_2D(N=20, T=0.2, dt=0.01)
