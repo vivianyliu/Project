@@ -13,7 +13,7 @@ A Python-based project exploring a range of numerical methods for solving linear
 - Matplotlib
 
 ## Methods Implemented
-
+***
 Finite Difference: classical grid-based method for solving PDEs using finite difference approximations of derivatives, used for time-dependent and steady-state problems with structured grids.
 *Supports explicit and implicit schemes
 *Straightforward to implement AND extend
