@@ -30,16 +30,12 @@ def assemble_stiffness_matrix(nodes, elements):
 
     for element in elements:
         i, j = element
-
-        # Element length
         h = nodes[j] - nodes[i]
 
         # Local stiffness matrix for lin elements
         k_local = (1 / h) * np.array([[1, -1], [-1, 1]])
-
         # Assemble into global matrix K
         K[i:i+2, i:i+2] += k_local
-
     return K.tocsc()
 
 def assemble_load_vector(nodes, elements, f):
@@ -58,17 +54,10 @@ def assemble_load_vector(nodes, elements, f):
     for elem in elements:
         i, j = elem
         h = nodes[j] - nodes[i]
-
-        # Midpoint rule for integral approximation
-        x_mid = (nodes[i] + nodes[j]) / 2
+        x_mid = (nodes[i] + nodes[j]) / 2 # Midpoint rule
         f_mid = f(x_mid)
-
-        # Local load vector
         f_local = (h / 2) * np.array([f_mid, f_mid])
-
-        # Assemble into global vector F
         F[i:i+2] += f_local
-
     return F
 
 def apply_boundary_conditions(K, F, nodes, u0=0, uL=0):
@@ -87,12 +76,10 @@ def apply_boundary_conditions(K, F, nodes, u0=0, uL=0):
     K[0, :] = 0
     K[0, 0] = 1
     F[0] = u0
-
     # Apply u(L) = uL
     K[-1, :] = 0
     K[-1, -1] = 1
     F[-1] = uL
-
     return K, F
 
 
@@ -115,17 +102,3 @@ def solve_poisson_fem(L=1.0, nx=10, f=lambda x: 1.0):
 
     u = spla.spsolve(K, F)
     return nodes, u
-
-
-if __name__ == "__main__":
-
-    # Solve Poisson equation with f(x) = 1
-    nodes, u = solve_poisson_fem(L=1.0, nx=20, f=lambda x: 1.0)
-
-    plt.plot(nodes, u, "-o", label="FEM Solution")
-    plt.xlabel("x")
-    plt.ylabel("u(x)")
-    plt.title("1D Poisson Equation Solution (FEM)")
-    plt.legend()
-    plt.grid()
-    plt.show()

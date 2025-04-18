@@ -99,25 +99,16 @@ def solve_heat_equation_1d(dx=0.1, dt=0.01, T=1.0, L=1.0, alpha=1.0, plot=True):
     plot (bool): Create plot true or false
     """
 
-    # Number of spatial points
     nx = int(L / dx) + 1
-
-    # Number of time steps
     nt = int(T / dt) + 1
 
-    # Stability criteria for explicit scheme
     r = alpha * dt / dx**2
     if r > 0.5:
         raise ValueError("Time step too large, unstable: reduce dt.")
     
-    # Solution grid
     u = np.zeros((nt, nx))
-    
-    # Initial condition u(x, 0) = sin(pi*x)
     x = np.linspace(0, L, nx)
     u[0, :] = np.sin(np.pi * x)
-
-    # Time stepping loop by explicit finite difference method
     for n in range(0, nt - 1):
         for i in range(1, nx - 1):
             u[n+1, i] = u[n, i] + r * (u[n, i+1] - 2*u[n, i] + u[n, i-1])
@@ -129,7 +120,6 @@ def solve_heat_equation_1d(dx=0.1, dt=0.01, T=1.0, L=1.0, alpha=1.0, plot=True):
         plt.xlabel("Position")
         plt.ylabel("Time")
         plt.show()
-    
     return x, u
 
 def solve_wave_equation_1d(dx=0.1, dt=0.01, T=1.0, L=1.0, c=1.0, plot=True):
@@ -148,22 +138,14 @@ def solve_wave_equation_1d(dx=0.1, dt=0.01, T=1.0, L=1.0, c=1.0, plot=True):
 
     nx = int(L / dx) + 1 # spatial points
     nt = int(T / dt) + 1 # time steps
-    
-    # Stability condition for wave equation
+
     if dt > dx / c:
         raise ValueError("Time step too large, unstable: reduce dt or increase dx.")
 
-    # Solution grid wave field, space x time
     u = np.zeros((nt, nx))
-
-    # Define spatial grid, set initial condition (Gaussian pulse)
     x = np.linspace(0, L, nx)
     u[0, :] = np.exp(-100 * (x - L/2)**2)
-
-    # Assume stationary start (zero initial velocity)
     u[:, 1] = u[:, 0]
-
-    # Time stepping loop by finite difference method
     for n in range(1, nt - 1):
         for i in range(1, nx - 1):
             u[n+1, i] = (2 * u[n, i] - u[n-1, i] + 
@@ -179,7 +161,6 @@ def solve_wave_equation_1d(dx=0.1, dt=0.01, T=1.0, L=1.0, c=1.0, plot=True):
         plt.legend()
         plt.grid()
         plt.show()
-
     return x, u
 
 
