@@ -102,33 +102,3 @@ def plot_solution_comparison(x, u_hist, u_exact, t, label="Numerical"):
     plt.legend()
     plt.grid(True)
     plt.show()
-
-if __name__ == "__main__":
-    L = 1.0
-    N = 200
-    dx = L / N
-    x = np.linspace(0, L, N, endpoint=False)
-    # Initial condition: we choose single sine wave
-    u0 = np.sin(2 * np.pi * x)
-    a = 1.0
-    dt = 0.4 * dx / a
-    t_max = 1.0
-    u_exact = np.sin(2 * np.pi * ((x - a * t_max) % 1.0))
-    u_hist = lax_wendroff_linear(u0, a, dx, dt, t_max)
-    plot_solution_comparison(x, u_hist, u_exact, t_max, label="Lax-Wendroff")
-    shift = compute_phase_error(u_hist, u_exact)
-    print(f"Approximate phase shift (in grid points): {shift}")
-
-    # Burgers' equation
-    u0_burgers = np.sin(2 * np.pi * x)
-    dt_burgers = 0.3 * dx / np.max(np.abs(u0_burgers))  # conservative CFL
-    t_max_burgers = 0.5
-    u_hist_burgers = lax_wendroff_burgers(u0_burgers, dx, dt_burgers, t_max_burgers)
-    plt.plot(x, u0_burgers, '--', label="Initial")
-    plt.plot(x, u_hist_burgers[-1], label="Lax-Wendroff (Burgers)")
-    plt.title("Nonlinear Advection: Inviscid Burgers' Equation")
-    plt.xlabel("x")
-    plt.ylabel("u")
-    plt.legend()
-    plt.grid(True)
-    plt.show()

@@ -117,22 +117,3 @@ def solve_fractional_rbf_dq_2D(N=20, T=0.1, dt=0.01, D=0.01, vx=1.0, vy=1.0):
         u = u_new.copy()
 
     return X, Y, u.reshape(N, N)
-
-
-if __name__ == "__main__":
-    X, Y, U = solve_2D_rbf_dq(N=20, T=0.1, dt=0.005, epsilon=2.0)
-    plt.contourf(X, Y, U, levels=50, cmap='plasma')
-    plt.title("H-RBF-DQ Solution Snapshot")
-    plt.xlabel("x")
-    plt.ylabel("y")
-    plt.colorbar(label="u(x, y, T)")
-    plt.grid(False)
-    plt.show()
-
-    X, Y, U = solve_fractional_rbf_dq_2D(N=20, T=0.2, dt=0.01)
-    plt.contourf(X, Y, U, levels=50, cmap='viridis')
-    plt.colorbar(label="u(x, y, T)")
-    plt.title("H-RBF-DQ Solution at Final Time (Fractional)")
-    plt.xlabel("x")
-    plt.ylabel("y")
-    plt.show()
