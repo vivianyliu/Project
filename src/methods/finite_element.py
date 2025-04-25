@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.sparse as sp
 import scipy.sparse.linalg as spla
+from scipy.spatial import Delaunay
 import matplotlib.pyplot as plt
 
 def generate_mesh(L, nx):
@@ -102,3 +103,107 @@ def solve_poisson_fem(L=1.0, nx=10, f=lambda x: 1.0):
 
     u = spla.spsolve(K, F)
     return nodes, u
+
+def generate_2d_mesh(nx, ny):
+    """Generates a structured 2D mesh and triangulates it.
+    Returns node coordinates and triangle connectivity.
+
+    Parameters:
+        nx (int): Number of points in x-direction.
+        ny (int): Number of points in y-direction.
+    """
+
+    x = np.linspace(0, 1, nx)
+    y = np.linspace(0, 1, ny)
+    X, Y = np.meshgrid(x, y)
+    points = np.vstack([X.ravel(), Y.ravel()]).T
+    tri = Delaunay(points)
+    return points, tri.simplices
+
+def local_stiffness_matrix(p1, p2, p3):
+    """Computes the local stiffness matrix for a linear triangle.
+    Returns the local matrix and area of the triangle.
+
+    Parameters:
+        p1, p2, p3 (np.ndarray): Coordinates of triangle vertices.
+    """
+
+    B = np.array([[p2[1] - p3[1], p3[1] - p1[1], p1[1] - p2[1]],
+                  [p3[0] - p2[0], p1[0] - p3[0], p2[0] - p1[0]]])
+    area = 0.5 * np.abs(np.linalg.det(np.array([[p2[0]-p1[0], p3[0]-p1[0]],
+                                                [p2[1]-p1[1], p3[1]-p1[1]]])))
+    return (B.T @ B) * (1 / (4 * area)), area
+
+def assemble_2d_stiffness(points, triangles):
+    """Assembles the global stiffness matrix for 2D Poisson problem.
+    Returns the global stiffness matrix as scipy.sparse.csr_matrix.
+
+    Parameters:
+        points (np.ndarray): Node coordinates.
+        triangles (np.ndarray): Triangle connectivity.
+    """
+    
+    n_points = len(points)
+    K = sp.lil_matrix((n_points, n_points))
+    for tri in triangles:
+        nodes = points[tri]
+        k_local, _ = local_stiffness_matrix(*nodes)
+        for i in range(3):
+            for j in range(3):
+                K[tri[i], tri[j]] += k_local[i, j]
+    return K.tocsc()
+
+def assemble_2d_load_vector(points, triangles, f):
+    """Assembles the global load vector using midpoint quadrature.
+    Returns the load vector as np.ndarray.
+
+    Parameters:
+        points (np.ndarray): Node coordinates.
+        triangles (np.ndarray): Triangle connectivity.
+        f (function): Source function f(x, y).
+    """
+
+    F = np.zeros(len(points))
+    for tri in triangles:
+        nodes = points[tri]
+        _, area = local_stiffness_matrix(*nodes)
+        centroid = np.mean(nodes, axis=0)
+        f_val = f(centroid[0], centroid[1])
+        F[tri] += f_val * area / 3  # Equal share to each node
+    return F
+
+def apply_dirichlet_bc_2d(K, F, points, boundary_func=lambda x, y: 0.0):
+    """Applies Dirichlet boundary conditions on the square boundary.
+    Modifies system matrix and RHS vector.
+
+    Parameters:
+        K (scipy.sparse.csr_matrix): Stiffness matrix.
+        F (np.ndarray): Load vector.
+        points (np.ndarray): Node coordinates.
+        boundary_func (function): u(x, y) on boundary.
+    """
+
+    for i, (x, y) in enumerate(points):
+        if x == 0 or x == 1 or y == 0 or y == 1:
+            K[i, :] = 0
+            K[i, i] = 1
+            F[i] = boundary_func(x, y)
+    return K, F
+
+def solve_poisson_2d(nx=20, ny=20, f=lambda x, y: 1.0):
+    """Solves the 2D Poisson equation -u'(x,y) = f(x,y) on [0,1]² using FEM.
+    Returns node coordinates, triangle connectivity, and solution vector.
+
+    Parameters:
+        nx (int): Number of points in x-direction.
+        ny (int): Number of points in y-direction.
+        f (function): Source function f(x, y).
+    """
+
+    points, triangles = generate_2d_mesh(nx, ny)
+    K = assemble_2d_stiffness(points, triangles)
+    F = assemble_2d_load_vector(points, triangles, f)
+    K, F = apply_dirichlet_bc_2d(K, F, points)
+    u = spla.spsolve(K, F)
+    return points, triangles, u
+
