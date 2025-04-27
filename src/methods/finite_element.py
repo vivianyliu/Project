@@ -206,4 +206,3 @@ def solve_poisson_2d(nx=20, ny=20, f=lambda x, y: 1.0):
     K, F = apply_dirichlet_bc_2d(K, F, points)
     u = spla.spsolve(K, F)
     return points, triangles, u
-
