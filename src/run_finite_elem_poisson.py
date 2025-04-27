@@ -1,4 +1,4 @@
-from finite_element import solve_poisson_fem
+from method_finite_element import solve_poisson_fem
 import matplotlib.pyplot as plt
 
 # Solve Poisson equation with f(x) = 1

@@ -1,4 +1,4 @@
-from lax_wendroff import lax_wendroff_linear, plot_solution_comparison, compute_phase_error
+from method_lax_wendroff import lax_wendroff_linear, plot_solution_comparison, compute_phase_error
 import numpy as np
 
 L = 1.0

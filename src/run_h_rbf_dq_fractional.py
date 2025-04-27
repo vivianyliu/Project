@@ -1,4 +1,4 @@
-from hermite_rbf_dq import solve_fractional_rbf_dq_2D
+from method_hermite_rbf_dq import solve_fractional_rbf_dq_2D
 import matplotlib.pyplot as plt
 
 X, Y, U = solve_fractional_rbf_dq_2D(N=20, T=0.2, dt=0.01)

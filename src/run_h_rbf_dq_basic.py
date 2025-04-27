@@ -1,4 +1,4 @@
-from hermite_rbf_dq import solve_2D_rbf_dq
+from method_hermite_rbf_dq import solve_2D_rbf_dq
 import matplotlib.pyplot as plt
 
 X, Y, U = solve_2D_rbf_dq(N=20, T=0.1, dt=0.005, epsilon=2.0)

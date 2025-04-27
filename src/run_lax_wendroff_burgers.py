@@ -1,4 +1,4 @@
-from lax_wendroff import lax_wendroff_burgers
+from method_lax_wendroff import lax_wendroff_burgers
 import numpy as np
 import matplotlib.pyplot as plt
 

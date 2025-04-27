@@ -1,4 +1,4 @@
-from finite_element import solve_poisson_2d
+from method_finite_element import solve_poisson_2d
 import matplotlib.pyplot as plt
 
 points, triangles, u = solve_poisson_2d()

@@ -1,4 +1,4 @@
-from spectral_methods import solve_poisson_spectral_2D, compute_error_up_to_constant
+from method_spectral_methods import solve_poisson_spectral_2D, compute_error_up_to_constant
 import matplotlib.pyplot as plt
 import numpy as np
 
