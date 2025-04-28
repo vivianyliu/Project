@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.spatial.distance import cdist
 
 def gaussian_rbf(r, epsilon=1.0):
@@ -105,6 +104,7 @@ def construct_hermite_rbf_laplacian(nodes, epsilon=1.0):
     Lap = A_inv @ Lap_A
     return Lap
 
+
 def solve_2D_hermite_rbf_neumann(N=50, T=0.01, dt=0.001, epsilon=1.0):
     """
     Solves the 2D heat equation using Hermite RBF-DQ Laplacian with Neumann boundary conditions.
@@ -139,14 +139,13 @@ def solve_2D_hermite_rbf_neumann(N=50, T=0.01, dt=0.001, epsilon=1.0):
         u_new = u + dt * (Lap @ u)
 
         # Enforce Neumann boundary conditions (derivative = 0 at boundaries)
-        u_new[0:N] = u_new[N:2*N]  # y = 0 boundary (no flux in y-direction)
-        u_new[(N-1)*N:N*N] = u_new[(N-2)*N:(N-1)*N]  # y = 1 boundary (no flux in y-direction)
-        u_new[::N] = u_new[1::N]  # x = 0 boundary (no flux in x-direction)
-        u_new[N-1::N] = u_new[N-2::N]  # x = 1 boundary (no flux in x-direction)
+        u_new[0:N] = u_new[N:2*N] # y = 0 boundary (no flux in y-direction)
+        u_new[(N-1)*N:N*N] = u_new[(N-2)*N:(N-1)*N] # y = 1 boundary (no flux in y-direction)
+        u_new[::N] = u_new[1::N] # x = 0 boundary (no flux in x-direction)
+        u_new[N-1::N] = u_new[N-2::N] # x = 1 boundary (no flux in x-direction)
 
         # Update u with the new solution
         u = u_new
-
     return X, Y, u.reshape(N, N)
 
 
@@ -179,6 +178,6 @@ def solve_heat_rbf(N=50, T=0.01, dt=0.001, epsilon=0.5):
     Nt = int(T / dt)
 
     for _ in range(Nt):
-        u += dt * (Lap @ u)  # Forward Euler
+        u += dt * (Lap @ u) # Forward Euler
 
     return X, Y, u.reshape(N, N)
