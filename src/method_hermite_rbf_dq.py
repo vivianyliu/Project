@@ -105,9 +105,9 @@ def construct_hermite_rbf_laplacian(nodes, epsilon=1.0):
     Lap = A_inv @ Lap_A
     return Lap
 
-def solve_2D_hermite_rbf(N=50, T=0.01, dt=0.001, epsilon=1.0):
+def solve_2D_hermite_rbf_neumann(N=50, T=0.01, dt=0.001, epsilon=1.0):
     """
-    Solves the 2D heat equation using Hermite RBF-DQ Laplacian.
+    Solves the 2D heat equation using Hermite RBF-DQ Laplacian with Neumann boundary conditions.
 
     Parameters:
         N: number of points per axis
@@ -126,15 +126,29 @@ def solve_2D_hermite_rbf(N=50, T=0.01, dt=0.001, epsilon=1.0):
     X, Y = np.meshgrid(x, y)
     nodes = np.vstack([X.ravel(), Y.ravel()]).T
 
+    # Initial condition: centered Gaussian
     u = np.exp(-50 * ((X - 0.5)**2 + (Y - 0.5)**2)).ravel()
 
     Lap = construct_hermite_rbf_laplacian(nodes, epsilon)
 
     Nt = int(T / dt)
+
+    # Solve the heat equation with Neumann boundary conditions
     for _ in range(Nt):
-        u += dt * (Lap @ u)  # heat equation: u_t = Lap(u)
+        # Update the solution using forward Euler, with Neumann conditions
+        u_new = u + dt * (Lap @ u)
+
+        # Enforce Neumann boundary conditions (derivative = 0 at boundaries)
+        u_new[0:N] = u_new[N:2*N]  # y = 0 boundary (no flux in y-direction)
+        u_new[(N-1)*N:N*N] = u_new[(N-2)*N:(N-1)*N]  # y = 1 boundary (no flux in y-direction)
+        u_new[::N] = u_new[1::N]  # x = 0 boundary (no flux in x-direction)
+        u_new[N-1::N] = u_new[N-2::N]  # x = 1 boundary (no flux in x-direction)
+
+        # Update u with the new solution
+        u = u_new
 
     return X, Y, u.reshape(N, N)
+
 
 def solve_heat_rbf(N=50, T=0.01, dt=0.001, epsilon=0.5):
     """
