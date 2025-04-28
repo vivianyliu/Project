@@ -1,5 +1,24 @@
 import numpy as np
-import matplotlib.pyplot as plt
+
+def compute_error_up_to_constant(u_approx, u_exact):
+    """
+    Solves the 2 norm error of the approximated and exact solution
+    
+    Parameters:
+        u_approx: the spectral solution
+        u_exact: -f(x)
+        
+    Returns:
+        l2_error: the 2 norm error of the spectral solution and -f(x)
+    """
+
+    shift = np.mean(u_exact) - np.mean(u_approx)
+    u_aligned = u_approx + shift
+
+    abs_error = np.abs(u_aligned - u_exact)
+    l2_error = np.sqrt(np.mean(abs_error**2))
+    return l2_error
+
 
 def solve_poisson_spectral_1D(f, N=1000, L=2*np.pi):
     """
@@ -34,25 +53,6 @@ def solve_poisson_spectral_1D(f, N=1000, L=2*np.pi):
     mean_shift = np.mean(-f(x)) - np.mean(u)
     u_aligned = u + mean_shift
     return x, u_aligned
-
-def compute_error_up_to_constant(u_approx, u_exact):
-    """
-    Solves the 2 norm error of the approximated and exact solution
-    
-    Parameters:
-        u_approx: the spectral solution
-        u_exact: -f(x)
-        
-    Returns:
-        l2_error: the 2 norm error of the spectral solution and -f(x)
-    """
-
-    shift = np.mean(u_exact) - np.mean(u_approx)
-    u_aligned = u_approx + shift
-
-    abs_error = np.abs(u_aligned - u_exact)
-    l2_error = np.sqrt(np.mean(abs_error**2))
-    return l2_error
 
 def solve_poisson_spectral_2D(f, N=1000, L=2*np.pi):
     """

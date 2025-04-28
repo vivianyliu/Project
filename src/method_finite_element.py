@@ -2,7 +2,6 @@ import numpy as np
 import scipy.sparse as sp
 import scipy.sparse.linalg as spla
 from scipy.spatial import Delaunay
-import matplotlib.pyplot as plt
 
 def generate_mesh(L, nx):
     """Generates a 1D mesh of equally spaced points.
@@ -84,26 +83,6 @@ def apply_boundary_conditions(K, F, nodes, u0=0, uL=0):
     return K, F
 
 
-def solve_poisson_fem(L=1.0, nx=10, f=lambda x: 1.0):
-    """Solves the 1D Poisson equation -u''(x) = f(x) using FEM.
-    Returns node positions and solution vector as np.ndarray 's.
-
-    Parameters:
-        L (float): Length of the domain.
-        nx (int): Number of elements.
-        f (function): Source function.
-    """
-
-    nodes, elements = generate_mesh(L, nx)
-    K = assemble_stiffness_matrix(nodes, elements)
-    F = assemble_load_vector(nodes, elements, f)
-
-    # Apply Dirichlet boundary conditions
-    K, F = apply_boundary_conditions(K, F, nodes, u0=0, uL=0)
-
-    u = spla.spsolve(K, F)
-    return nodes, u
-
 def generate_2d_mesh(nx, ny):
     """Generates a structured 2D mesh and triangulates it.
     Returns node coordinates and triangle connectivity.
@@ -169,7 +148,7 @@ def assemble_2d_load_vector(points, triangles, f):
         _, area = local_stiffness_matrix(*nodes)
         centroid = np.mean(nodes, axis=0)
         f_val = f(centroid[0], centroid[1])
-        F[tri] += f_val * area / 3  # Equal share to each node
+        F[tri] += f_val * area / 3 # Equal share to each node
     return F
 
 def apply_dirichlet_bc_2d(K, F, points, boundary_func=lambda x, y: 0.0):
@@ -189,20 +168,3 @@ def apply_dirichlet_bc_2d(K, F, points, boundary_func=lambda x, y: 0.0):
             K[i, i] = 1
             F[i] = boundary_func(x, y)
     return K, F
-
-def solve_poisson_2d(nx=20, ny=20, f=lambda x, y: 1.0):
-    """Solves the 2D Poisson equation -u'(x,y) = f(x,y) on [0,1]² using FEM.
-    Returns node coordinates, triangle connectivity, and solution vector.
-
-    Parameters:
-        nx (int): Number of points in x-direction.
-        ny (int): Number of points in y-direction.
-        f (function): Source function f(x, y).
-    """
-
-    points, triangles = generate_2d_mesh(nx, ny)
-    K = assemble_2d_stiffness(points, triangles)
-    F = assemble_2d_load_vector(points, triangles, f)
-    K, F = apply_dirichlet_bc_2d(K, F, points)
-    u = spla.spsolve(K, F)
-    return points, triangles, u

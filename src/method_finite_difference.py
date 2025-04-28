@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
 def forward_difference(f, x, h=1e-6):
     """To find approximation of f'(x) by forward difference method.
@@ -83,82 +82,3 @@ def interp_poly(xx, yy):
             p = p * (x-xx[i]) + dd[i]
         return (p)
     return (poly)
-
-
-def solve_heat_equation_1d(dx=0.1, dt=0.01, T=1.0, L=1.0, alpha=1.0, plot=True):
-    """Solve the 1D heat equation using explicit finite difference method.
-    Returns temperature distribution over space and time, an np.ndarray.
-    Can plot heat map.
-
-    Parameters:
-    dx (float): Space step
-    dt (float): Time step
-    T (float): Total simulation time
-    L (float): Length of the domain
-    alpha (float): Diffusion coefficient
-    plot (bool): Create plot true or false
-    """
-
-    nx = int(L / dx) + 1
-    nt = int(T / dt) + 1
-
-    r = alpha * dt / dx**2
-    if r > 0.5:
-        raise ValueError("Time step too large, unstable: reduce dt.")
-    
-    u = np.zeros((nt, nx))
-    x = np.linspace(0, L, nx)
-    u[0, :] = np.sin(np.pi * x)
-    for n in range(0, nt - 1):
-        for i in range(1, nx - 1):
-            u[n+1, i] = u[n, i] + r * (u[n, i+1] - 2*u[n, i] + u[n, i-1])
-
-    if plot:        
-        plt.imshow(u, aspect='auto', cmap='hot', origin='lower', extent=[0, 1, 0, 1])
-        plt.title("Heat Equation Solution")
-        plt.colorbar(label="Temperature")
-        plt.xlabel("Position")
-        plt.ylabel("Time")
-        plt.show()
-    return x, u
-
-def solve_wave_equation_1d(dx=0.1, dt=0.01, T=1.0, L=1.0, c=1.0, plot=True):
-    """Solve the 1D wave equation using finite difference method.
-    Returns wave distribution over space and time, an np.ndarray.
-    Can plot wave propogation.
-
-    Parameters:
-    dx (float): Space step
-    dt (float): Time step
-    T (float): Total simulation time
-    L (float): Length of the domain
-    c (float): Wave speed
-    plot (bool): Create plot true or false
-    """
-
-    nx = int(L / dx) + 1 # spatial points
-    nt = int(T / dt) + 1 # time steps
-
-    if dt > dx / c:
-        raise ValueError("Time step too large, unstable: reduce dt or increase dx.")
-
-    u = np.zeros((nt, nx))
-    x = np.linspace(0, L, nx)
-    u[0, :] = np.exp(-100 * (x - L/2)**2)
-    u[:, 1] = u[:, 0]
-    for n in range(1, nt - 1):
-        for i in range(1, nx - 1):
-            u[n+1, i] = (2 * u[n, i] - u[n-1, i] + 
-                         (c**2 * dt**2 / dx**2) * (u[n, i+1] - 2*u[n, i] + u[n, i-1]))
-
-    if plot:
-        plt.figure(figsize=(8, 5))
-        for n in range(0, nt, nt//10):
-            plt.plot(x, u[n, :], label=f"t={n*dt:.2f}")
-        plt.xlabel("x")
-        plt.ylabel("u(x, t)")
-        plt.title("1D Wave Equation - Finite Differences")
-        plt.legend()
-        plt.grid()
-        plt.show()
-    return x, u
