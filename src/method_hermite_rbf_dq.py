@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import math
 from scipy.spatial.distance import cdist
 
@@ -60,7 +59,7 @@ def get_l1_weights(alpha, dt, N_steps):
     return weights
 
 
-def solve_2D_rbf_dq(N=10, T=1.0, dt=0.01, epsilon=1.0):
+def solve_rbf_dq_2D(N=10, T=1.0, dt=0.01, epsilon=1.0):
     """
     Solves a 2D diffusion-type equation using H-RBF-DQ.
 
@@ -77,11 +76,9 @@ def solve_2D_rbf_dq(N=10, T=1.0, dt=0.01, epsilon=1.0):
     u = np.exp(-50 * ((X - 0.5)**2 + (Y - 0.5)**2)).ravel()
 
     D = construct_rbf_dq_matrix(nodes, epsilon)
-
     Nt = int(T / dt)
     for _ in range(Nt):
         u += dt * D @ u # simplified time steps u_t = D @ u
-
     return X, Y, u.reshape(N, N)
 
 def solve_fractional_rbf_dq_2D(N=20, T=0.1, dt=0.01, D=0.01, vx=1.0, vy=1.0):
@@ -95,7 +92,7 @@ def solve_fractional_rbf_dq_2D(N=20, T=0.1, dt=0.01, D=0.01, vx=1.0, vy=1.0):
 
     Nt = int(T / dt)
     U_hist = [u.copy()]
-    a_grid = 0.8 + 0.2 * np.sin(2 * np.pi * nodes[:, 0])  # variable order α(x)
+    a_grid = 0.8 + 0.2 * np.sin(2 * np.pi * nodes[:, 0]) # variable order alpha(x)
 
     all_weights = [get_l1_weights(a, dt, Nt) for a in a_grid]
 
@@ -115,5 +112,4 @@ def solve_fractional_rbf_dq_2D(N=20, T=0.1, dt=0.01, D=0.01, vx=1.0, vy=1.0):
 
         U_hist.append(u_new.copy())
         u = u_new.copy()
-
     return X, Y, u.reshape(N, N)

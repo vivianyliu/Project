@@ -1,4 +1,4 @@
-from method_lax_wendroff import lax_wendroff_linear, compute_phase_error, lax_wendroff_burgers
+from method_lax_wendroff import compute_phase_error, solve_laxwendroff_linear, solve_laxwendroff_burgers
 import unittest
 import numpy as np
 
@@ -13,7 +13,7 @@ class TestLaxWendroff(unittest.TestCase):
         dt = 0.5 * dx / a  # CFL condition
         t_max = 2 * np.pi / a
 
-        u_hist = lax_wendroff_linear(u0, a, dx, dt, t_max)
+        u_hist = solve_laxwendroff_linear(u0, a, dx, dt, t_max)
         self.assertEqual(u_hist.shape, (int(t_max / dt) + 1, N))
 
     def test_compute_phase_error_zero_for_exact_shift(self):
@@ -25,7 +25,7 @@ class TestLaxWendroff(unittest.TestCase):
         dt = 0.5 * dx / a
         t_max = 2*np.pi / a
 
-        u_hist = lax_wendroff_linear(u0, a, dx, dt, t_max)
+        u_hist = solve_laxwendroff_linear(u0, a, dx, dt, t_max)
         u_exact = np.sin(x)  # after full period sin(x) returns to itself
 
         shift = compute_phase_error(u_hist, u_exact)
@@ -39,7 +39,7 @@ class TestLaxWendroff(unittest.TestCase):
         dt = 0.2 * dx  # smaller dt for nonlinear case
         t_max = 0.5
 
-        u_hist = lax_wendroff_burgers(u0, dx, dt, t_max)
+        u_hist = solve_laxwendroff_burgers(u0, dx, dt, t_max)
         mass_initial = np.sum(u_hist[0])
         mass_final = np.sum(u_hist[-1])
 

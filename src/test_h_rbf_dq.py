@@ -3,7 +3,7 @@ from method_hermite_rbf_dq import (
     construct_rbf_dq_matrix,
     construct_rbf_dq_derivatives,
     get_l1_weights,
-    solve_2D_rbf_dq,
+    solve_rbf_dq_2D,
     solve_fractional_rbf_dq_2D
 )
 import unittest
@@ -36,8 +36,8 @@ class TestHermiteRBFDQ(unittest.TestCase):
         weights = get_l1_weights(alpha, dt, N_steps)
         self.assertEqual(len(weights), N_steps)
 
-    def test_solve_2D_rbf_dq(self):
-        X, Y, u = solve_2D_rbf_dq(N=10, T=0.1, dt=0.01, epsilon=1.0)
+    def test_solve_rbf_dq_2D(self):
+        X, Y, u = solve_rbf_dq_2D(N=10, T=0.1, dt=0.01, epsilon=1.0)
         self.assertEqual(u.shape, (10, 10))
 
     def test_solve_fractional_rbf_dq_2D(self):

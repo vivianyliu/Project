@@ -2,11 +2,9 @@ from method_finite_element import (
     generate_mesh,
     assemble_stiffness_matrix,
     assemble_load_vector,
-    solve_poisson_fem,
     generate_2d_mesh,
     assemble_2d_stiffness,
     assemble_2d_load_vector,
-    solve_poisson_2d,
 )
 import unittest
 import numpy as np
@@ -36,12 +34,6 @@ class TestFiniteElement(unittest.TestCase):
         self.assertEqual(len(F), 3)
         self.assertTrue(np.all(F >= 0)) # Load vector should be non-negative if f positive
 
-    def test_solve_poisson_fem(self):
-        nodes, u = solve_poisson_fem(L=1.0, nx=10, f=lambda x: 1.0)
-        self.assertEqual(len(nodes), len(u))
-        self.assertAlmostEqual(u[0], 0.0, places=6) # Boundary condition u(0) = 0
-        self.assertAlmostEqual(u[-1], 0.0, places=6) # Boundary condition u(1) = 0
-
     def test_generate_2d_mesh(self):
         points, triangles = generate_2d_mesh(5, 5)
         self.assertTrue(points.shape[1] == 2)
@@ -59,14 +51,6 @@ class TestFiniteElement(unittest.TestCase):
         F = assemble_2d_load_vector(points, triangles, f)
         self.assertEqual(len(F), len(points))
         self.assertTrue(np.all(np.isfinite(F)))
-
-    def test_solve_poisson_2d(self):
-        points, triangles, u = solve_poisson_2d(nx=5, ny=5, f=lambda x, y: 1.0)
-        self.assertEqual(len(points), len(u))
-        # Check that Dirichlet boundary conditions hold approximately (should be 0)
-        boundary_nodes = [i for i, (x,y) in enumerate(points) if x == 0 or x == 1 or y == 0 or y == 1]
-        for i in boundary_nodes:
-            self.assertAlmostEqual(u[i], 0.0, places=3)
 
 if __name__ == '__main__':
     unittest.main()

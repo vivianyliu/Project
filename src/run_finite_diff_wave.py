@@ -44,7 +44,7 @@ for n in range(0, nt, nt//10):
     plt.plot(x, u[n, :], label=f"t={n*dt:.2f}")
 plt.xlabel("x")
 plt.ylabel("u(x, t)")
-plt.title("1D Wave Equation - Finite Differences")
+plt.title("1D FDM Wave Equation Solution")
 plt.legend()
 plt.grid()
 plt.show()

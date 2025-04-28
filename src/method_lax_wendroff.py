@@ -1,7 +1,23 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
-def lax_wendroff_linear(u0, a, dx, dt, t_max):
+def compute_phase_error(u_hist, u_exact):
+    """
+    Computes the phase shift between the numerical and exact solution by comparing
+    the location of the peak (maximum value) in both.
+
+    Parameters:
+        u_hist: 2D array, numerical solution at all time steps
+        u_exact: array-like, exact solution at final time
+
+    Returns:
+        shift: int, index shift between numerical and exact peaks
+    """
+    u_final = u_hist[-1]
+    shift = np.argmax(u_final) - np.argmax(u_exact)
+    return shift
+
+
+def solve_laxwendroff_linear(u0, a, dx, dt, t_max):
     """
     Solves the 1D linear advection equation using the second-order Lax-Wendroff scheme:
         u_t + a u_x = 0
@@ -32,23 +48,7 @@ def lax_wendroff_linear(u0, a, dx, dt, t_max):
         u_hist.append(u.copy())
     return np.array(u_hist)
 
-def compute_phase_error(u_hist, u_exact):
-    """
-    Computes the phase shift between the numerical and exact solution by comparing
-    the location of the peak (maximum value) in both.
-
-    Parameters:
-        u_hist: 2D array, numerical solution at all time steps
-        u_exact: array-like, exact solution at final time
-
-    Returns:
-        shift: int, index shift between numerical and exact peaks
-    """
-    u_final = u_hist[-1]
-    shift = np.argmax(u_final) - np.argmax(u_exact)
-    return shift
-
-def lax_wendroff_burgers(u0, dx, dt, t_max):
+def solve_laxwendroff_burgers(u0, dx, dt, t_max):
     """
     Solves the nonlinear inviscid Burgers' equation using the Lax-Wendroff method:
         u_t + (u^2 / 2)_x = 0
@@ -74,31 +74,9 @@ def lax_wendroff_burgers(u0, dx, dt, t_max):
         # L-W update
         u_new[1:-1] = u[1:-1] - (dt / (2 * dx)) * (f[2:] - f[:-2]) \
                       + (dt**2 / (2 * dx**2)) * (fp[2:] * (f[2:] - f[1:-1]) - fp[:-2] * (f[1:-1] - f[:-2]))
-
         u_new[0] = u_new[-2]
         u_new[-1] = u_new[1]
 
         u = u_new.copy()
         u_hist.append(u.copy())
     return np.array(u_hist)
-
-
-def plot_solution_comparison(x, u_hist, u_exact, t, label="Numerical"):
-    """
-    Plots the numerical and exact solutions at a given time.
-
-    Parameters:
-        x: array-like, spatial grid points
-        u_hist: 2D array, numerical solution at all time steps
-        u_exact: array-like, exact solution at final time
-        t: float, time of snapshot
-        label: str, label for the numerical method used
-    """
-    plt.plot(x, u_exact, '--', label='Exact')
-    plt.plot(x, u_hist[-1], label=label)
-    plt.title(f"Solution at t={t}")
-    plt.xlabel("x")
-    plt.ylabel("u")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
