@@ -1,38 +1,76 @@
 import numpy as np
-import math
+import matplotlib.pyplot as plt
 from scipy.spatial.distance import cdist
 
 def gaussian_rbf(r, epsilon=1.0):
+    """
+    Gaussian radial basis function.
+
+    Parameters:
+        r: distances between nodes
+        epsilon: shape parameter
+
+    Returns:
+        RBF values
+    """
     return np.exp(-(epsilon * r)**2)
 
-def construct_rbf_dq_matrix(nodes, epsilon=1.0):
+def gaussian_rbf_derivatives(xi, xj, epsilon=1.0):
     """
-    Constructs the RBF-DQ derivative matrix using Gaussian RBFs.
+    Computes the derivatives of Gaussian RBF with respect to x and y.
 
     Parameters:
-        nodes: array of shape (N, 2)
+        xi: evaluation points (N x 2)
+        xj: center points (N x 2)
         epsilon: shape parameter
 
     Returns:
-        D: derivative approximation matrix (mocked)
+        A: RBF matrix
+        dA_dx: derivative with respect to x
+        dA_dy: derivative with respect to y
+        d2A: Laplacian (second derivatives combined)
     """
-    r = cdist(nodes, nodes)
+    
+    dx = xi[:, 0][:, None] - xj[:, 0]
+    dy = xi[:, 1][:, None] - xj[:, 1]
+    r = np.sqrt(dx**2 + dy**2)
     A = gaussian_rbf(r, epsilon)
-    A_inv = np.linalg.pinv(A)
-    D = np.dot(A_inv, np.gradient(A, axis=0))  # crude placeholder
-    return D
+    dA_dx = -2 * epsilon**2 * dx * A
+    dA_dy = -2 * epsilon**2 * dy * A
+    d2A = 2 * epsilon**2 * (2 * epsilon**2 * (dx**2 + dy**2) - 1) * A
+    return A, dA_dx, dA_dy, d2A
 
-def construct_rbf_dq_derivatives(nodes, epsilon=2.0):
+def laplacian_gaussian_rbf(r, dx, dy, epsilon=1.0):
     """
-    Constructs RBF-DQ matrices for ∂/∂x, ∂/∂y, and Laplacian ∇².
+    Compute Laplacian of Gaussian RBF.
+
+    Parameters:
+        r: distances between nodes
+        dx: x-distances between nodes
+        dy: y-distances between nodes
+        epsilon: shape parameter
+
+    Returns:
+        Laplacian of Gaussian RBF
+    """
+    
+    r2 = r**2
+    A = gaussian_rbf(r, epsilon)
+    term = 2 * epsilon**2 * (2 * epsilon**2 * r2 - 1)
+    return term * A
+
+def construct_rbf_dq_laplacian(nodes, epsilon=1.0):
+    """
+    Constructs Laplacian operator matrix using standard RBF-DQ.
 
     Parameters:
         nodes: array of shape (N, 2)
         epsilon: shape parameter
 
     Returns:
-        Dx, Dy, Lap: derivative matrices
+        Lap: Laplacian operator matrix
     """
+    
     r = cdist(nodes, nodes)
     A = gaussian_rbf(r, epsilon)
     A_inv = np.linalg.pinv(A)
@@ -40,76 +78,93 @@ def construct_rbf_dq_derivatives(nodes, epsilon=2.0):
     dx = nodes[:, 0][:, None] - nodes[:, 0]
     dy = nodes[:, 1][:, None] - nodes[:, 1]
 
-    dA_dx = -2 * epsilon**2 * dx * A
-    dA_dy = -2 * epsilon**2 * dy * A
     d2A = 2 * epsilon**2 * (2 * epsilon**2 * (dx**2 + dy**2) - 1) * A
-
-    Dx = A_inv @ dA_dx
-    Dy = A_inv @ dA_dy
     Lap = A_inv @ d2A
-    return Dx, Dy, Lap
+    return Lap
 
-def get_l1_weights(alpha, dt, N_steps):
-    """Generates L1 weights for time-fractional Caputo derivative."""
-    gamma = np.zeros(N_steps)
-    gamma[0] = 1
-    for k in range(1, N_steps):
-        gamma[k] = (1 - (1 + alpha) / k) * gamma[k - 1]
-    weights = dt**(-alpha) * gamma / math.gamma(2 - alpha)
-    return weights
-
-
-def solve_rbf_dq_2D(N=10, T=1.0, dt=0.01, epsilon=1.0):
+def construct_hermite_rbf_laplacian(nodes, epsilon=1.0):
     """
-    Solves a 2D diffusion-type equation using H-RBF-DQ.
+    Constructs Laplacian operator matrix using Hermite-corrected RBF-DQ.
 
     Parameters:
-        N: number of nodes along each axis
+        nodes: array of shape (N, 2)
+        epsilon: shape parameter
+
+    Returns:
+        Lap: corrected Laplacian operator matrix
+    """
+    r = cdist(nodes, nodes)
+    dx = nodes[:, 0][:, None] - nodes[:, 0]
+    dy = nodes[:, 1][:, None] - nodes[:, 1]
+
+    A = gaussian_rbf(r, epsilon)
+    A_inv = np.linalg.pinv(A)
+
+    Lap_A = laplacian_gaussian_rbf(r, dx, dy, epsilon)
+
+    Lap = A_inv @ Lap_A
+    return Lap
+
+def solve_2D_hermite_rbf(N=50, T=0.01, dt=0.001, epsilon=1.0):
+    """
+    Solves the 2D heat equation using Hermite RBF-DQ Laplacian.
+
+    Parameters:
+        N: number of points per axis
         T: final time
         dt: time step
-        epsilon: RBF shape parameter
+        epsilon: shape parameter
+
+    Returns:
+        X: x-grid points
+        Y: y-grid points
+        u: solution at final time (N x N)
     """
+    
     x = np.linspace(0, 1, N)
     y = np.linspace(0, 1, N)
     X, Y = np.meshgrid(x, y)
     nodes = np.vstack([X.ravel(), Y.ravel()]).T
+
     u = np.exp(-50 * ((X - 0.5)**2 + (Y - 0.5)**2)).ravel()
 
-    D = construct_rbf_dq_matrix(nodes, epsilon)
+    Lap = construct_hermite_rbf_laplacian(nodes, epsilon)
+
     Nt = int(T / dt)
     for _ in range(Nt):
-        u += dt * D @ u # simplified time steps u_t = D @ u
+        u += dt * (Lap @ u)  # heat equation: u_t = Lap(u)
+
     return X, Y, u.reshape(N, N)
 
-def solve_fractional_rbf_dq_2D(N=20, T=0.1, dt=0.01, D=0.01, vx=1.0, vy=1.0):
+def solve_heat_rbf(N=50, T=0.01, dt=0.001, epsilon=0.5):
+    """
+    Solves the 2D heat equation using standard RBF-DQ Laplacian.
+
+    Parameters:
+        N: number of points per axis
+        T: final time
+        dt: time step
+        epsilon: shape parameter
+
+    Returns:
+        X: x-grid points
+        Y: y-grid points
+        u: solution at final time (N x N)
+    """
+    
     x = np.linspace(0, 1, N)
     y = np.linspace(0, 1, N)
     X, Y = np.meshgrid(x, y)
     nodes = np.vstack([X.ravel(), Y.ravel()]).T
+
+    # Initial condition: centered Gaussian
     u = np.exp(-50 * ((X - 0.5)**2 + (Y - 0.5)**2)).ravel()
 
-    Dx, Dy, Lap = construct_rbf_dq_derivatives(nodes, epsilon=2.0)
+    Lap = construct_rbf_dq_laplacian(nodes, epsilon)
 
     Nt = int(T / dt)
-    U_hist = [u.copy()]
-    a_grid = 0.8 + 0.2 * np.sin(2 * np.pi * nodes[:, 0]) # variable order alpha(x)
 
-    all_weights = [get_l1_weights(a, dt, Nt) for a in a_grid]
+    for _ in range(Nt):
+        u += dt * (Lap @ u)  # Forward Euler
 
-    for n in range(1, Nt):
-        u_new = np.zeros_like(u)
-
-        for i in range(len(u)):
-            weights = all_weights[i][:n] # truncate weights to available history
-            available_history = np.array([U_hist[n - k] for k in range(1, n + 1)])
-            frac_term = np.dot(weights, available_history[:, i])
-
-            advection = -vx * (Dx @ u)[i] - vy * (Dy @ u)[i]
-            diffusion = D * (Lap @ u)[i]
-            source = 0
-
-            u_new[i] = frac_term + dt**a_grid[i] * (diffusion + advection + source)
-
-        U_hist.append(u_new.copy())
-        u = u_new.copy()
     return X, Y, u.reshape(N, N)
