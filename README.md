@@ -38,9 +38,3 @@ A Python-based project exploring a range of numerical methods for solving linear
 * Solves 2D advection-diffusion and fractional time PDEs
 * Supports variable-order Caputo fractional derivatives
 * Great for handling irregular domains and complex dynamics without meshing
-
-## Ongoing Work
-
-* Add exact solutions for benchmarking fractional solvers
-* Automate convergence testing
-* Add PDE definitions and solvers in src/pdes/
